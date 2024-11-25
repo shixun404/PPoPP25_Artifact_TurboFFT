@@ -120,7 +120,9 @@ void TurboFFT_main(ProgramConfig &config){
             long long int bs = 1;
             if(config.if_bench % 10 == 2) bs = bs << (config.param_1 - logN);
             for(int i = 0; i <= config.param_1 - logN; i += 1){
-                if(config.if_bench > 10) profiler::cufft::test_cufft<DataType>(input_d, output_d, output_cufft, N, bs, ntest);
+                if(config.if_bench > 10 && config.if_bench < 20) profiler::cufft::test_cufft<DataType>(input_d, output_d, output_cufft, N, bs, ntest);
+                else if(config.if_bench > 20) profiler::cufft::test_cufft_ft<DataType>(input_d, output_d, output_cufft, input_d + N * (bs + 2),
+                                        input_d + N * (bs + 1), output_d + N * (bs + 2),   N, bs, ntest, 16);
                 else test_turbofft<DataType, if_thread_ft, if_ft, if_err, gpu_spec>(input_d, output_d, output_turbofft, twiddle_d, checksum_d, params[logN], bs, config.thread_bs, ntest, config);
                 bs *= 2;
                 if(config.if_bench % 10 == 2) break; 
