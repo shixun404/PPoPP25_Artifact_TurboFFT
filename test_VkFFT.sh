@@ -1,3 +1,5 @@
+git clone https://github.com/DTolm/VkFFT.git
+cp CMakeLists_VkFFT.txt VkFFT/CMakeLists.txt
 cd VkFFT
 mkdir build
 cd build
