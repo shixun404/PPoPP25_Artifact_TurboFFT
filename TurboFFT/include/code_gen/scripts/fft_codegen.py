@@ -8,7 +8,7 @@ M_PI = 3.141592653589793
 class TurboFFT:
     def __init__(self, global_tensor_shape=[256, 1], radix=2, WorkerFFTSizes = [8],
                         threadblock_bs=[1], threadblock_bs_dim=[0], shared_mem_size=[0], 
-                        data_type='double2', if_special=False, if_ft=0, 
+                        data_type='double2', if_special=False, if_thread_ft=0, if_ft=0, 
                         if_err_injection=0,  err_smoothing=1000, err_inj=100,
                         err_threshold=1e-3, if_write=True):
         self.fft_code = []
@@ -19,6 +19,7 @@ class TurboFFT:
         self.rPtr_3 = "rPtr_3"
         self.rPtr_4 = "rPtr_4"
         self.shPtr = "shPtr"
+        self.if_thread_ft = if_thread_ft
         self.if_err_injection = if_err_injection
         self.err_inj = err_inj
         self.err_smoothing = err_smoothing
@@ -213,7 +214,7 @@ class TurboFFT:
         head = f'''
 #include "../../../TurboFFT_radix_2_template.h"
 template<>
-__global__ void fft_radix_{self.radix}<{self.data_type}, {int(log(N, self.radix))}, {dim}, {self.ft}, {self.if_err_injection}>''' \
+__global__ void fft_radix_{self.radix}<{self.data_type}, {int(log(N, self.radix))}, {dim}, {self.if_thread_ft}, {self.ft}, {self.if_err_injection}>''' \
         + f'''({self.data_type}* inputs, {self.data_type}* outputs, {self.data_type}* twiddle, {self.data_type}* checksum_DFT, int BS, int thread_bs)''' + ''' {
     int bid_cnt = 0;
     '''
@@ -364,10 +365,7 @@ __global__ void fft_radix_{self.radix}<{self.data_type}, {int(log(N, self.radix)
         '''
                         if self.ft == 1 and not if_correction:
                             globalAccess_code += f'''
-        // tmp = checksum_DFT[tx / {threadblock_bs} + {i * (global_tensor_shape[self.dim_] // WorkerFFTSize)}];
-        // turboFFT_ZMUL_ACC(tmp_1, {self.rPtr}[{i}], tmp);
-        //  turboFFT_ZMUL_ACC(tmp_1, {self.rPtr}[{i}], {self.rPtr_2}[{i}])
-        turboFFT_ZMUL(tmp, {self.rPtr}[{i}], {self.rPtr_2}[{i}])
+        turboFFT_ZMUL{'_THREAD_FT' if self.if_thread_ft else ''}(tmp, {self.rPtr}[{i}], {self.rPtr_2}[{i}])
         tmp_1.x += (tmp.x + tmp.y);
         tmp_3.x += bid_cnt * (tmp.x + tmp.y);
         '''
@@ -380,13 +378,9 @@ __global__ void fft_radix_{self.radix}<{self.data_type}, {int(log(N, self.radix)
                     if self.ft == 1 and not if_correction:
                         globalAccess_code += f'''
         // 1's vector
-        // tmp_3.y -=  ({self.rPtr}[{dict_output[i]}].y + {self.rPtr}[{dict_output[i]}].x) * bid_cnt;
-        // tmp_1.y -=  ({self.rPtr}[{dict_output[i]}].y + {self.rPtr}[{dict_output[i]}].x);
-        turboFFT_ZMUL(tmp, {self.rPtr}[{dict_output[i]}],r[({i * (global_tensor_shape[dim] // WorkerFFTSize)} + tx / {threadblock_bs}) % 3])
+        turboFFT_ZMUL{'_THREAD_FT' if self.if_thread_ft else ''}(tmp, {self.rPtr}[{dict_output[i]}],r[({i * (global_tensor_shape[dim] // WorkerFFTSize)} + tx / {threadblock_bs}) % 3])
         tmp_1.y -= (tmp.x + tmp.y);
         tmp_3.y -= (tmp.y + tmp.x) * bid_cnt;
-        // turboFFT_ZMUL_NACC(tmp_1,  {self.rPtr}[{dict_output[i]}], r[({i * (global_tensor_shape[dim] // WorkerFFTSize)} + tx / {threadblock_bs}) % 3])
-        // turboFFT_ZMUL_NACC(tmp_3,  {self.rPtr}[{dict_output[i]}], r[({i * (global_tensor_shape[dim] // WorkerFFTSize)} + tx / {threadblock_bs}) % 3])
         '''
                     if if_twiddle:
                         N = th.prod(global_tensor_shape[:(dim + 1)])
@@ -404,11 +398,11 @@ __global__ void fft_radix_{self.radix}<{self.data_type}, {int(log(N, self.radix)
                         else:
                             globalAccess_code += f'''
         tmp = angle;
-        turboFFT_ZMUL(angle, tmp, delta_angle);
+        turboFFT_ZMUL{'_THREAD_FT' if self.if_thread_ft else ''}(angle, tmp, delta_angle);
         '''                              
                         globalAccess_code += f'''
             tmp = {self.rPtr}[{dict_output[i]}];
-            turboFFT_ZMUL({self.rPtr}[{dict_output[i]}], tmp, angle);
+            turboFFT_ZMUL{'_THREAD_FT' if self.if_thread_ft else ''}({self.rPtr}[{dict_output[i]}], tmp, angle);
             '''
                     if if_correction:
                         globalAccess_code += f'''
@@ -436,9 +430,6 @@ __global__ void fft_radix_{self.radix}<{self.data_type}, {int(log(N, self.radix)
             '''     
                 else:
                     globalAccess_code += f'''
-            // {self.rPtr_3}[{i}] = *({self.gPtr} + {i * access_stride});
-            // turboFFT_ZADD({self.rPtr_3}[{i}], {self.rPtr_3}[{i}], {self.rPtr}[{dict_output[i]}] );
-            // *({self.gPtr} + {i * access_stride}) = {self.rPtr_3}[{i}];
             *({self.gPtr} + {i * access_stride}) = {self.rPtr}[{dict_output[i]}];
         '''                    
         if self.ft == 1 and if_output and not if_correction:
@@ -646,9 +637,9 @@ __global__ void fft_radix_{self.radix}<{self.data_type}, {int(log(N, self.radix)
                 else:
                     reg2shared_code += f'''
     tmp = angle;
-    turboFFT_ZMUL(angle, tmp, delta_angle);
+    turboFFT_ZMUL{'_THREAD_FT' if self.if_thread_ft else ''}(angle, tmp, delta_angle);
     tmp = {self.rPtr}[{dict_output[output_id]}];
-    turboFFT_ZMUL({self.rPtr}[{dict_output[output_id]}], tmp, angle);
+    turboFFT_ZMUL{'_THREAD_FT' if self.if_thread_ft else ''}({self.rPtr}[{dict_output[output_id]}], tmp, angle);
     '''             
 
             if dim == 0 and len(self.global_tensor_shape) == 2 :
@@ -682,8 +673,8 @@ __global__ void fft_radix_{self.radix}<{self.data_type}, {int(log(N, self.radix)
                 abs_bounds = 1e-5
                 fft_reg_code += f'''
     tmp = {self.rPtr}[{id_j1}];
-    turboFFT_ZADD({self.rPtr}[{id_j1}], tmp, {self.rPtr}[{id_j2}]);
-    turboFFT_ZSUB({self.rPtr}[{id_j2}], tmp, {self.rPtr}[{id_j2}]);
+    turboFFT_ZADD{'_THREAD_FT' if self.if_thread_ft else ''}({self.rPtr}[{id_j1}], tmp, {self.rPtr}[{id_j2}]);
+    turboFFT_ZSUB{'_THREAD_FT' if self.if_thread_ft else ''}({self.rPtr}[{id_j2}], tmp, {self.rPtr}[{id_j2}]);
     tmp = {self.rPtr}[{id_j2}];
     '''
                 if np.allclose(0, cos(tmp_angle), rel_bounds, abs_bounds):
@@ -710,13 +701,13 @@ __global__ void fft_radix_{self.radix}<{self.data_type}, {int(log(N, self.radix)
                         fft_reg_code += f'''
         angle.x = {cos(tmp_angle)};
         angle.y = {sin(tmp_angle)};
-        turboFFT_ZMUL({self.rPtr}[{id_j2}], tmp, angle);
+        turboFFT_ZMUL{'_THREAD_FT' if self.if_thread_ft else ''}({self.rPtr}[{id_j2}], tmp, angle);
         '''
                     else:
                         fft_reg_code += f'''
         angle.x = {cos(tmp_angle)}f;
         angle.y = {sin(tmp_angle)}f;
-        turboFFT_ZMUL({self.rPtr}[{id_j2}], tmp, angle);
+        turboFFT_ZMUL{'_THREAD_FT' if self.if_thread_ft else ''}({self.rPtr}[{id_j2}], tmp, angle);
         '''             
         
         return fft_reg_code
@@ -724,8 +715,10 @@ __global__ void fft_radix_{self.radix}<{self.data_type}, {int(log(N, self.radix)
 if __name__ == '__main__':
     params = []
     parser = argparse.ArgumentParser(description="turboFFT.")
+    parser.add_argument('--if_thread_ft', type=int, default=0, 
+                        help='Flag to indicate thread level ft (0 for False, 1 for True)')
     parser.add_argument('--if_ft', type=int, default=0, 
-                        help='Flag to indicate feature transformation (0 for False, 1 for True)')
+                        help='Flag to indicate threadblock level ft (0 for False, 1 for True)')
     parser.add_argument('--if_err_injection', type=int, default=0, 
                         help='Flag to indicate error injection (0 for False, 1 for True)')
     parser.add_argument('--err_smoothing', type=int, default=1000, 
@@ -745,6 +738,7 @@ if __name__ == '__main__':
 
     # Access arguments
     if_ft = args.if_ft
+    if_thread_ft = args.if_thread_ft
     if_err_injection = args.if_err_injection
     err_smoothing = args.err_smoothing
     err_inj = args.err_inj
@@ -783,7 +777,7 @@ if __name__ == '__main__':
         
         fft = TurboFFT(global_tensor_shape=global_tensor_shape, WorkerFFTSizes=WorkerFFTSizes,
                     threadblock_bs=threadblock_bs, threadblock_bs_dim=threadblock_bs_dim[st - 1], shared_mem_size=shared_mem_size, data_type=datatype, if_special=if_special,
-                    if_ft=if_ft, if_err_injection=if_err_injection, err_inj=err_inj, 
+                    if_thread_ft=if_thread_ft, if_ft=if_ft, if_err_injection=if_err_injection, err_inj=err_inj, 
                     err_smoothing=err_smoothing, err_threshold=err_threshold, if_write=False)
         fft.codegen()
         fft.save_generated_code()
