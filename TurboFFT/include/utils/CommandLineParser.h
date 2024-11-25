@@ -105,11 +105,11 @@ public:
         if (gpu == "T4"){
             param_1 = 26;
             param_2 = 4;
-            smem_size = 128;
-            sm_cnt = 108;
+            smem_size = 32;
+            sm_cnt = 40;
             smem_capacity = 64;
         } else{
-            // param_1 = 28;
+            param_1 = 28;
             param_2 = 16;
             // smem_size = 128;
             sm_cnt = 108;

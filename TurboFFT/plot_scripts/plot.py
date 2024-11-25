@@ -60,8 +60,8 @@ for p in range(2):
         lines = f.readlines()
         for line in lines:
             splitted = line.split(',')
-            if splitted[0] != 'turboFFT' and splitted[0] != 'cuFFT':
-                continue
+            # if splitted[0] != 'turboFFT' and splitted[0] != 'cuFFT':
+            #     continue
             logN = int(splitted[1])
             logBS = int(splitted[2])
             exec_time = float(splitted[3])

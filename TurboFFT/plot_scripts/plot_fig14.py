@@ -40,9 +40,16 @@ _, turbofft_no_ft = utils.load_data_single_sc(file_name_lists[1])
 _, turbofft_ft = utils.load_data_single_sc(file_name_lists[2])
 _, turbofft_err = utils.load_data_single_sc(file_name_lists[3])
 _, xin = utils.load_data_single_sc(file_name_lists[-2])
-vkfft = th.as_tensor([54.037978,107.172698,162.357973,214.765546,269.936302,325.183609,378.504591,428.645155,481.552961,529.716212,465.167462,318.590441,346.845709,370.003057,395.774621,389.102683,400.783646,360.550859,361.347375,405.507960,355.067390,362.761015,373.276336,362.836422,334.851178])
-vkfft *= 4
+# vkfft = th.as_tensor([54.037978,107.172698,162.357973,214.765546,269.936302,325.183609,378.504591,428.645155,481.552961,529.716212,465.167462,318.590441,346.845709,370.003057,395.774621,389.102683,400.783646,360.550859,361.347375,405.507960,355.067390,362.761015,373.276336,362.836422,334.851178])
+# vkfft *= 4
 
+vkFFT = th.load('../artifact_data/VkFFT_data/vkFFT.pt')[1]
+vkfft = []
+for i in range(1, 26):
+    # print(vkFFT[i], vkFFT[i][28 - i])
+    gflops = 5 * (2 ** i) * i * (2 ** (28-i)) / vkFFT[i][28 - i] * 1000 / 1000000000.0
+    vkfft.append(gflops)
+vkfft = th.as_tensor(vkfft)
 
 l = N.shape[0]
 # print(((turbofft_err[1:, 0, 1] - turbofft_no_ft[1:, 0, 1]) / turbofft_no_ft[1:, 0, 1]).mean())
@@ -89,8 +96,17 @@ _, turbofft_no_ft = utils.load_data_single_sc(file_name_lists[1 + 4])
 _, turbofft_ft = utils.load_data_single_sc(file_name_lists[2 + 4])
 _, turbofft_err = utils.load_data_single_sc(file_name_lists[3 + 4])
 _, xin = utils.load_data_single_sc(file_name_lists[-1])
-vkfft  = th.as_tensor([106.505101,211.794537,320.018956,426.183860,534.689379,645.786371,744.521505,856.230688,965.247954,1080.585532,1167.387529,1053.020716,680.060203,730.905417,776.663035,825.653568,892.905666,822.305245,946.622101,894.953900,714.654186,748.555643,776.556882,806.125929,756.330899])
-vkfft *= 4
+# vkfft  = th.as_tensor([106.505101,211.794537,320.018956,426.183860,534.689379,645.786371,744.521505,856.230688,965.247954,1080.585532,1167.387529,1053.020716,680.060203,730.905417,776.663035,825.653568,892.905666,822.305245,946.622101,894.953900,714.654186,748.555643,776.556882,806.125929,756.330899])
+# vkfft *= 4
+
+
+vkFFT = th.load('../artifact_data/VkFFT_data/vkFFT.pt')[0]
+vkfft = []
+for i in range(1, 26):
+    gflops = 5 * (2 ** i) * i * (2 ** (28-i)) / vkFFT[i][28 - i] * 1000 / 1000000000.0
+    vkfft.append(gflops)
+    # vkfft.append(vkFFT[i][28 - i])
+vkfft = th.as_tensor(vkfft)
 
 l = N.shape[0]
 # print(((turbofft_err[1:, 0, 1] - turbofft_no_ft[1:, 0, 1]) / turbofft_no_ft[1:, 0, 1]).mean())

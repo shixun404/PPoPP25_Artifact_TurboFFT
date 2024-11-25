@@ -10,7 +10,7 @@ namespace cufft{
 template<typename DataType>
 void test_cufft_ft(DataType* input_d, DataType* output_d, DataType* output_cufft,
                 DataType* e_d, DataType* x_i_c, DataType* x_o_c, 
-                long long int N, size_t bs, int ntest, int M);
+                long long int N, size_t bs, int ntest, int M, bool if_error_injection);
 template<typename DataType>
 void test_cufft_ft_gemv(DataType* input_d, DataType* output_d, DataType* output_cufft,
                 DataType* e_d, DataType* x_i_c, DataType* x_o_c, 
@@ -19,7 +19,7 @@ void test_cufft_ft_gemv(DataType* input_d, DataType* output_d, DataType* output_
 template<>
 void test_cufft_ft<float2>(float2* input_d, float2* output_d, float2* output_cufft,
                             float2* e_d, float2* x_i_c, float2* x_o_c,
-                            long long int N, size_t bs, int ntest, int M) {
+                            long long int N, size_t bs, int ntest, int M, bool if_error_injection) {
     cufftHandle plan, plan_ft;
     cublasHandle_t handle;         
     float gflops, elapsed_time, mem_bandwidth;
@@ -58,6 +58,7 @@ void test_cufft_ft<float2>(float2* input_d, float2* output_d, float2* output_cuf
         checkCudaErrors(cufftExecC2C(plan, reinterpret_cast<cufftComplex*>(input_d), 
                      reinterpret_cast<cufftComplex*>(output_d), 
                      CUFFT_FORWARD));
+        
         // checkCudaErrors(cufftExecC2C(plan_ft, reinterpret_cast<cufftComplex*>(input_d), 
         //              reinterpret_cast<cufftComplex*>(output_d), 
         //              CUFFT_FORWARD));
@@ -68,7 +69,10 @@ void test_cufft_ft<float2>(float2* input_d, float2* output_d, float2* output_cuf
                                     reinterpret_cast<float*>(e_d), 1, (float*)&(beta), 
                                     reinterpret_cast<float*>(x_o_c), 1);
       
-      
+        if (if_error_injection)
+         checkCudaErrors(cufftExecC2C(plan, reinterpret_cast<cufftComplex*>(input_d), 
+                     reinterpret_cast<cufftComplex*>(output_d), 
+                     CUFFT_FORWARD));
         cudaDeviceSynchronize();
     }
     cudaEventRecord(fft_end);
@@ -93,7 +97,7 @@ void test_cufft_ft<float2>(float2* input_d, float2* output_d, float2* output_cuf
 template<>
 void test_cufft_ft<double2>(double2* input_d, double2* output_d, double2* output_cufft,
                             double2* e_d, double2* x_i_c, double2* x_o_c,
-                            long long int N, size_t bs, int ntest, int M) {
+                            long long int N, size_t bs, int ntest, int M, bool if_error_injection) {
     cufftHandle plan;
     float gflops, elapsed_time, mem_bandwidth;
     cudaEvent_t fft_begin, fft_end;
@@ -133,6 +137,11 @@ void test_cufft_ft<double2>(double2* input_d, double2* output_d, double2* output
                                     reinterpret_cast<double*>(e_d), 1, (double*)&(beta), 
                                     reinterpret_cast<double*>(x_o_c), 1);
       cudaDeviceSynchronize();
+      if (if_error_injection)
+      checkCudaErrors(cufftExecZ2Z(plan, reinterpret_cast<cufftDoubleComplex*>(input_d), 
+                        reinterpret_cast<cufftDoubleComplex*>(output_d), 
+                        CUFFT_FORWARD));
+                        cudaDeviceSynchronize();
       
     }
     cudaEventRecord(fft_end);

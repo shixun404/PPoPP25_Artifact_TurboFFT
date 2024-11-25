@@ -62,4 +62,4 @@ if __name__ == "__main__":
             else:
                 print(x, bs, p, 'not find') # Return None if the pattern is not found
 
-    th.save(result, 'TurboFFT/artifact_data/VkFFT_data/vkFFT.pt')
+    th.save(result, 'vkFFT.pt')
