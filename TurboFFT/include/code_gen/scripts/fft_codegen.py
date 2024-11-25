@@ -475,8 +475,8 @@ __global__ void fft_radix_{self.radix}<{self.data_type}, {int(log(N, self.radix)
         __syncthreads();
         '''
             globalAccess_code += f'''
-            tmp_1 = {self.shPtr}[(tx % {num_thread // 32}) * 2];
-            tmp_3 = {self.shPtr}[(tx % {num_thread // 32}) * 2 + 1];
+            tmp_1 = {self.shPtr}[(tx % {max(1, num_thread // 32)}) * 2];
+            tmp_3 = {self.shPtr}[(tx % {max(1, num_thread // 32)}) * 2 + 1];
         '''
             i = num_thread // 32
             while( i > 1):
