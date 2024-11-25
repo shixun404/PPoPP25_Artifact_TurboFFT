@@ -12,6 +12,7 @@ public:
     bool if_verify = false;
     int if_bench = true;
     bool if_ft = false;
+    bool if_thread_ft = false;
     bool if_err = false;
     int datatype = 0;
     int thread_bs = 1;
@@ -36,7 +37,8 @@ public:
                   << "                           (2) for logBS + logN = 28.\n"
                   << "                           (11) for cuFFT.\n"
                   << "                           (12) for cuFFT &  logBS + logN = 28.\n"
-                  << "  --if_ft <0|1>        Enable (1) or disable (0) fault tolerance.\n"
+                  << "  --if_thread_ft <0|1>        Enable (1) or disable (0) thread-level fault tolerance.\n"
+                  << "  --if_ft <0|1>        Enable (1) or disable (0) threadblock-level fault tolerance.\n"
                   << "  --if_err <0|1>       Enable (1) or disable (0) error injection.\n"
                   << "  --datatype <type>    0 for FP32, 1 for FP64.\n"
                   << "  --thread_bs <value>  Set batches per block to <value>.\n"
@@ -58,6 +60,8 @@ public:
             if_profile = std::atol(value);
         } else if (strcmp(parameterName, "--if_verify") == 0) {
             if_verify = std::atol(value);
+        } else if (strcmp(parameterName, "--if_thread_ft") == 0) {
+            if_thread_ft = std::atol(value);
         } else if (strcmp(parameterName, "--if_ft") == 0) {
             if_ft = std::atol(value);
         } else if (strcmp(parameterName, "--if_err") == 0) {
@@ -116,6 +120,7 @@ public:
     void displayConfig() const {
         std::cout << "N: " << N << ", bs: " << bs << ", bs_end: " << bs_end << ", bs_gap: " << bs_gap << std::endl;
         std::cout << "if_profile: " << if_profile << ", if_verify: " << if_verify << ", if_bench: " << if_bench << std::endl;
+        std::cout << "if_thread_ft: " << if_thread_ft << std::endl;
         std::cout << "if_ft: " << if_ft << ", if_err: " << if_err << std::endl;
         std::cout << "datatype: " << datatype << ", thread_bs: " << thread_bs << std::endl;
         std::cout << "gpu: " << gpu << ", param_1: " << param_1 << ", param_2: " << param_2 << std::endl;
