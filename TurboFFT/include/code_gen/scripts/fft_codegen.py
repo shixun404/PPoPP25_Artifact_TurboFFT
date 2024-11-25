@@ -84,7 +84,7 @@ class TurboFFT:
                         f.write("\n")
                 else:
                     # if self.ft == 0:
-                    if self.ft == 0 or self.if_write is True:
+                    if ( self.ft == 0 and self.if_thread_ft == 0) or self.if_write is True:
                         with open(file_name, 'w') as f:
                             f.write(self.fft_code[i])
                     else:
@@ -101,7 +101,7 @@ class TurboFFT:
                 else:
                     file_name = f"../generated/{self.data_type}/fft_radix_{self.radix}_logN_{int(log(N, 2))}_upload_{0}.cuh"
                     # if self.ft == 0:
-                    if self.ft == 0 or self.if_write is True:
+                    if ( self.ft == 0 and self.if_thread_ft == 0) or self.if_write is True:
                         with open(file_name, 'w') as f:
                             f.write(self.fft_code[1])
                     else:
