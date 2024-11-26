@@ -6,8 +6,8 @@ import re
 
 def test():
     filename = 'vkfft_output'
-    file = open(filename, 'w')
-
+    file = open(filename, 'w')  
+    cnt = 1
     for precision in range(1):
         for x in range(1, 26):
             X_value = 2**x
@@ -29,9 +29,12 @@ def test():
                 file.write("STDERR:\n" + stderr.decode())
             file.write("\n\n")  # Adding some spacing between entries for readability
             # Print output and error if any
+            print(f"Benchmarking VkFFT {cnt}/25")
+            cnt += 1
             print("STDOUT:", stdout.decode())
             if stderr:
                 print("STDERR:", stderr.decode())
+    print("Benchmarking VkFFT Finished")
 
 if __name__ == "__main__":
     test()

@@ -7,7 +7,8 @@ import re
 def test():
     filename = 'vkfft_output'
     file = open(filename, 'w')
-
+    cnt = 1
+    print(f"The default VkFFT executable only provides functionality to test a single data point. Therefore, we benchmarked all test points from Fig. 1, with 400 data points each for float and double precision C2C FFTs, namely 800 datapoints in total.")
     for precision in range(2):
         for x in range(1, 26):
             X_value = 2**x
@@ -32,9 +33,12 @@ def test():
                     file.write("STDERR:\n" + stderr.decode())
                 file.write("\n\n")  # Adding some spacing between entries for readability
                 # Print output and error if any
+                print(f"Benchmark VkFFT {cnt}/800")
+                cnt += 1
                 print("STDOUT:", stdout.decode())
                 if stderr:
                     print("STDERR:", stderr.decode())
+    print("Benchmarking VkFFT Finished")
 
 if __name__ == "__main__":
     test()
