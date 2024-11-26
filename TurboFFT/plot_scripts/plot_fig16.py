@@ -30,7 +30,7 @@ for i in range(26):
 mask = mask.numpy()
 mask = mask[1:26]
 letter_id = 'abcdef'
-label = ['TruboFFT Offline', 'TurboFFT w/ FT,\nThread-Level']
+label = ['TurboFFT Offline', 'TurboFFT w/ FT,\nThread-Level']
 for i in range(6):
 	label.append(f'({letter_id[i]}) TurboFFT w/ FT,\nthread_BS={2**i}')
 TurboFFT_FT_best = th.ones(25, 30) * 1e6
