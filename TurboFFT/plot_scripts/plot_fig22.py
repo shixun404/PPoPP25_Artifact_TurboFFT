@@ -24,16 +24,16 @@ def print_average(tensor, name):
     avg = (tensor.sum() - tensor.max() - tensor.min()) / tensor.shape[0]
     print(name, avg)
     print(tensor.sort())
-file_name_lists = ['..//sc_data//benchmark_cufft_T4_fp64.csv', 
-                  '..//sc_data//benchmark_turbofft_err_no_ft_T4_fp64.csv',
-                  '..//sc_data//benchmark_turbofft_err_no_inj_T4_fp64.csv',
-                  '..//sc_data//benchmark_turbofft_err_inj_T4_fp64.csv',
-                  '..//sc_data//benchmark_cufft_T4_fp32.csv', 
-                  '..//sc_data//benchmark_TurboFFT_T4_fp32.csv',
-                  '..//sc_data//benchmark_TurboFFT_ft_T4_fp32.csv',
-                  '..//sc_data//benchmark_TurboFFT_err_T4_fp32.csv',
-                  '..//sc_data//benchmark_xin_T4_fp64.csv',
-                  '..//sc_data//benchmark_xin_T4_fp32.csv',]
+file_name_lists = ['../artifact_data/cuFFT_data/Benchmark=2_cuFFT_FP64.csv', 
+                  '../artifact_data/TurboFFT_data/Benchmark=2_TurboFFT_FP64.csv',
+                  '../artifact_data/TurboFFT_data/Benchmark=2_TurboFFT_FP64_FT_BS=1.csv',
+                  '../artifact_data/TurboFFT_data/Benchmark=2_TurboFFT_FP64_ERR_BS=32.csv',
+                  '../artifact_data/cuFFT_data/Benchmark=2_cuFFT_FP32.csv', 
+                  '../artifact_data/TurboFFT_data/Benchmark=2_TurboFFT_FP32.csv',
+                  '../artifact_data/TurboFFT_data/Benchmark=2_TurboFFT_FP32_FT_BS=1.csv',
+                  '../artifact_data/TurboFFT_data/Benchmark=2_TurboFFT_FP32_ERR_BS=32.csv',
+                  '../artifact_data/cuFFT_data/Benchmark=2_Offline_FP64_ERR.csv',
+                  '../artifact_data/cuFFT_data/Benchmark=2_Offline_FP32_ERR.csv',]
 
 
 
@@ -44,10 +44,19 @@ _, turbofft_no_ft = utils.load_data_single_sc(file_name_lists[1 + 4])
 _, turbofft_ft = utils.load_data_single_sc(file_name_lists[2 + 4])
 _, turbofft_err = utils.load_data_single_sc(file_name_lists[3 + 4])
 _, xin = utils.load_data_single_sc(file_name_lists[-1])
-vkfft  = [th.as_tensor([18.856425,38.260894,56.832585,75.886271,83.531304,115.701428,132.154234,151.689159,173.116049,168.269255,136.555026,102.206111,61.360775,66.156473,70.861783,70.442738,93.549754,91.827571,90.922577,85.780549,117.860116,123.257691,84.618186,83.745148,82.654686]),
-          th.as_tensor([30.172305,30.609636,30.310284,30.349599,26.730239,30.853665,30.200452,30.337070,30.778000,26.929983,19.874457,13.625185,7.543268,7.568684,7.562180,7.040235,8.804815,8.160355,7.657915,6.861562,8.977991,8.963086,5.888536,5.612584,5.295870])]
-vkfft[0] *= 4
-vkfft[1] *= 4
+
+
+vkFFT = th.load('../artifact_data/VkFFT_data/vkFFT_T4.pt')[0]
+vkfft_gflops = []
+vkfft_bandwidth = []
+for i in range(1, 26):
+    # print(vkFFT[i])
+    gflops = 5 * (2 ** i) * i * (2 ** (26-i)) / vkFFT[i][26 - i] * 1000 / 1000000000.0
+    vkfft_gflops.append(gflops)
+    bandwidth = ((2 ** i) * (2 ** (26-i)) * 8 * 2) / vkFFT[i][26 - i] * 1000.0 / 1000000000.0
+    vkfft_bandwidth.append(bandwidth)
+vkfft = [th.as_tensor(vkfft_gflops), th.as_tensor(vkfft_bandwidth)]
+
 
 def data_analysis(d1, cufft, name):
     rel = (d1 - cufft) / cufft
@@ -108,4 +117,5 @@ for i in range(2):
     # ax[0].set_yticks(yticks)
     ax[i].yaxis.set_tick_params(rotation=90)
 ax[0].legend(loc="lower right", prop={'size': 24},  labelspacing=0, bbox_to_anchor=(1.02,-0.03))
-fig.savefig(f"..//sc_figures//T4_error_injection.pdf", bbox_inches='tight')
+fig.savefig(f"../artifact_figures/figure22.pdf", bbox_inches='tight')
+print('./artifact_figures/figure22.pdf')

@@ -14,24 +14,13 @@ if __name__ == '__main__':
     zticks = [ [0, 0.5, 1], [0, 0.1, 0.2, 0.3], [0, 0.1, 0.2], [0, 0.1, 0.2, 0.3]]
     zlim_label = [ ['0', '0.5', '8.1'], ['0', '0.1', '0.2', '0.3'],
                 ['0', '0.1', '0.2'], ['0', '0.1', '0.2', '0.3']]
-                
-    # Creating figure
-    # fig = plt.figure()
-    # fsz = 32  
-    # mksz = 40
-    # plt.rcParams['lines.linewidth'] = 0.5
-    # plt.rcParams["font.family"] = "Times New Roman"
-    # plt.rc('font', size=fsz, weight='bold')
-    # plt.rcParams["font.family"] = "Times New Roman"
-    # plt.rcParams["hatch.color"] = 'white'
-    # plt.rcParams['hatch.linewidth'] = 2.0
-    # fig = plt.figure(figsize=(20, 10))
+    
     plt.rcParams['lines.linewidth'] = 0.5
     plt.rc('font', size=30, weight='bold')
     plt.rcParams["hatch.color"] = 'white'
     plt.rcParams['hatch.linewidth'] = 2.0
     fig = plt.figure(figsize=(20, 10))
-    name_lists = [['cuFFT_data/T4_Benchmark=1_cuFFT_FP64.csv','TurboFFT_data/T4_Benchmark=1_TurboFFT_FP64.csv'], 
+    name_lists = [['cuFFT_data/Benchmark=1_cuFFT_FP32.csv','TurboFFT_data/Benchmark=1_TurboFFT_FP32.csv'], 
                      ]
     title_list = [['Compute Performance\n     T4 FP32   ', 'Memory Bandwidth\n   T4 FP32  '], 
                ]
