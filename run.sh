@@ -99,7 +99,21 @@ cp Benchmark=2_TurboFFT_FP64_ERR_BS=32.csv  ../artifact_data/TurboFFT_data
 cp Benchmark=2_TurboFFT_FP64_FT_BS=1.csv ../artifact_data/TurboFFT_data
 cp Benchmark=2_TurboFFT_FP64.csv ../artifact_data/TurboFFT_data
 
-cd ../plot_scripts
+cd ../../
+git clone https://github.com/DTolm/VkFFT.git
+cp CMakeLists_VkFFT.txt VkFFT/CMakeLists.txt
+cd VkFFT
+mkdir build
+cd build
+cmake -DVKFFT_BACKEND=1 ..
+make -j
+cp ../../test_VkFFT.py .
+python test_VkFFT.py
+cp vkFFT.pt ../../TurboFFT/artifact_data/VkFFT_data/vkFFT.pt
+
+
+
+cd ../../TurboFFT/plot_scripts
 python3 plot.py
 python3 plot_fig1.py
 python3 plot_fig10.py

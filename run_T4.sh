@@ -58,9 +58,10 @@ mkdir build
 cd build
 cmake -DVKFFT_BACKEND=1 ..
 make -j
+
 cp ../../test_VkFFT_T4.py .
 python test_VkFFT_T4.py
-cp vkFFT.pt ../../TurboFFT/artifact_data/VkFFT_data/
+cp vkFFT.pt ../../TurboFFT/artifact_data/VkFFT_data/vkFFT_T4.pt
 
 
 cd ../../TurboFFT/plot_scripts
