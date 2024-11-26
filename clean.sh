@@ -5,6 +5,7 @@ chmod -R 777 VkFFT
 rm -r VkFFT
 rm TurboFFT/artifact_data/TurboFFT_data/*.csv
 rm TurboFFT/artifact_data/cuFFT_data/*.csv
+rm TurboFFT/artifact_data/VkFFT_data/*.pt
 # rm TurboFFT/artifact_data/VkFFT_data/*.csv
 rm TurboFFT/artifact_data/cuFFT.pt
 rm TurboFFT/artifact_data/TurboFFT_FT.pt
