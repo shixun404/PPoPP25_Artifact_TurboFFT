@@ -77,13 +77,13 @@ data = [
     turbofft_err[1:, 0, 1] ,
     xin[1:, 0, 1] 
 ]
-for i in range(5):
-    data_analysis(data[i], cufft[1:, 0, 1], print_name[i])
+# for i in range(5):
+#     data_analysis(data[i], cufft[1:, 0, 1], print_name[i])
 
 
 l = N.shape[0]
-print(((turbofft_err[1:, 0, 1] - turbofft_no_ft[1:, 0, 1]) / turbofft_no_ft[1:, 0, 1]).mean())
-print((turbofft_err[1:, 0, 1] - turbofft_no_ft[1:, 0, 1]))
+# print(((turbofft_err[1:, 0, 1] - turbofft_no_ft[1:, 0, 1]) / turbofft_no_ft[1:, 0, 1]).mean())
+# print((turbofft_err[1:, 0, 1] - turbofft_no_ft[1:, 0, 1]))
 
 
 l = N.shape[0]
